@@ -23,6 +23,11 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            /* Ngăn bôi đen văn bản trên toàn trang */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         .top-bar {
@@ -33,6 +38,22 @@
             background-color: var(--bar-bg);
             border-bottom: 1px solid #333;
             z-index: 100;
+        }
+
+        /* Khu vực bên trái chứa Logo và Nút chọn bệnh nhân */
+        .top-left-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* CSS cho Logo trường */
+        .school-logo {
+            height: 36px;
+            width: auto;
+            border-radius: 4px;
+            object-fit: contain;
+            pointer-events: none; /* Ngăn kéo thả logo */
         }
 
         .patient-selector { display: flex; align-items: center; gap: 10px; }
@@ -112,6 +133,7 @@
             max-width: 90%;
             max-height: 90%;
             object-fit: contain;
+            pointer-events: none;
         }
 
         .series-thumbnail span {
@@ -141,8 +163,21 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            user-select: none;
-            -webkit-user-drag: none;
+            pointer-events: none;
+        }
+
+        /* ----- WATERMARK ĐÓNG DẤU CHÌM ----- */
+        .watermark {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.25);
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            z-index: 10;
         }
 
         .slice-info {
@@ -165,19 +200,20 @@
             cursor: pointer;
             transition: color 0.2s;
             display: none;
+            z-index: 20;
         }
         .viewer-main:hover .viewer-nav { display: block; }
         .viewer-nav:hover { color: var(--accent-color); }
         .viewer-prev { left: 20px; }
         .viewer-next { right: 20px; }
 
-        /* Chữ ký bản quyền */
+        /* Chữ ký bản quyền Footer */
         .footer-copyright {
             background-color: #0a0a0a;
-            color: #444;
+            color: #555;
             text-align: center;
             font-size: 11px;
-            padding: 5px 0;
+            padding: 8px 0;
             letter-spacing: 1px;
             border-top: 1px solid #1a1a1a;
             text-transform: uppercase;
@@ -187,14 +223,19 @@
 <body>
 
     <div class="top-bar">
-        <div class="patient-selector">
-            <label for="patient-dropdown">Chọn ca chụp: </label>
-            <select id="patient-dropdown" onchange="changePatient(this.value)">
-                <option value="patient1">Bệnh nhân 1</option>
-                <option value="patient2">Bệnh nhân 2</option>
-                <option value="patient3">Bệnh nhân 3</option>
-            </select>
+        <div class="top-left-section">
+            <img src="https://i.ibb.co/4gthjLk5/images.jpg" alt="Logo Trường" class="school-logo">
+            
+            <div class="patient-selector">
+                <label for="patient-dropdown">Chọn ca chụp: </label>
+                <select id="patient-dropdown" onchange="changePatient(this.value)">
+                    <option value="patient1">Bệnh nhân 1</option>
+                    <option value="patient2">Bệnh nhân 2</option>
+                    <option value="patient3">Bệnh nhân 3</option>
+                </select>
+            </div>
         </div>
+        
         <div class="patient-info-basic">
             <span id="patient-age-gender"></span>
             <button class="btn-more-info" id="toggle-details-btn" onclick="togglePatientDetails()">Xem thêm thông tin</button>
@@ -208,6 +249,8 @@
     <div class="series-container" id="thumbnail-container"></div>
 
     <div class="viewer-main" id="viewer-area">
+        <div class="watermark">CODE BY HOANG VAN CUONG ©</div>
+        
         <img id="main-image" src="" alt="CT Scan">
         <div class="slice-info" id="slice-counter">Lát cắt: 0 / 0</div>
         
@@ -216,10 +259,26 @@
     </div>
 
     <div class="footer-copyright">
-        web by hoàng văn cường no coppy right
+        web by hoàng văn cường - no copy right © 2026
     </div>
 
     <script>
+        // Ngăn chặn bấm chuột phải để chống lưu ảnh
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Chống sử dụng phím tắt như F12, Ctrl+Shift+I, Ctrl+C (Mức cơ bản)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'u' || e.key === 's' || e.key === 'p')) {
+                e.preventDefault();
+            }
+            if (e.key === 'F12') {
+                e.preventDefault();
+            }
+        });
+
+        // --- CƠ SỞ DỮ LIỆU BỆNH NHÂN ---
         const database = {
             "patient1": {
                 name: "Bệnh nhân 1",
@@ -261,7 +320,7 @@
                             "https://prod-images-static.radiopaedia.org/images/64628896/64a14a051ad1230ef3a8075e51d9328a169d2b48bc7761621e73c502e132112a.jpeg",
                             "https://prod-images-static.radiopaedia.org/images/64628897/b5ff0214652dd3d187efe24e63a304b9369c93dcf1a6943a5053766a64281959.jpeg",
                             "https://prod-images-static.radiopaedia.org/images/64628898/22276d378c300e76c5a9203bd25851f81e004e3e186e19f0ef1c7d7c04fe63b9.jpeg",
-                            "https://prod-images-static.radiopaedia.org/images/64628889/ce1d26ec7b56b4f9e990ec2cfee0dcf7cd3f4f4b041099e82f261bd785ce1aa1.jpeg"
+                            "https://prod-images-static.radiopaedia.org/images/64628899/ce1d26ec7b56b4f9e990ec2cfee0dcf7cd3f4f4b041099e82f261bd785ce1aa1.jpeg"
                         ]
                     },
                     "cua-so-xuong-coronal": {
@@ -367,7 +426,8 @@
                             "https://prod-images-static.radiopaedia.org/images/64628919/38faf0d325a71ffafac0db207cc087898ef85fbaabbc1e7f94af576a9a400b97.jpeg",
                             "https://prod-images-static.radiopaedia.org/images/64628918/5062cb38f5c4d1b8cdef9940ee7b474585b228667666b3eef0df53cadda84cec.jpeg",
                             "https://prod-images-static.radiopaedia.org/images/64628917/917c2809104dbd111bc27d29209b177ea565930e22e516dece0288094965d17c.jpeg",
-                            "https://prod-images-static.radiopaedia.org/images/64628916/bd69fc0016620253b4e3a698c9e591dbc7ad4379a9cd51049330da78cf9cf46d.jpeg"
+                            "https://prod-images-static.radiopaedia.org/images/64628916/bd69fc0016620253b4e3a698c9e591dbc7ad4379a9cd51049330da78cf9cf46d.jpeg",
+                            
                         ]
                     },
                     "cua-so-nhu-mo": {
