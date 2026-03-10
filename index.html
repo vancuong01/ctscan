@@ -3,424 +3,769 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOÀNG VĂN CƯỜNG-3110723017</title>
+    <title>Medical CT Viewer - Chuyên Nghiệp</title>
     <style>
+        :root {
+            --bg-color: #121212;
+            --bar-bg: #1e1e1e;
+            --accent-color: #ff9800;
+            --text-color: #ffffff;
+            --text-secondary: #aaaaaa;
+            --border-radius: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: #000; color: #fff; margin: 0;
-            display: flex; flex-direction: column; align-items: center;
-            height: 100vh; font-family: Arial, sans-serif; overflow: hidden;
-        }
-        
-        .header {
-            width: 100%; background: #1a1a1a; display: flex; 
-            justify-content: space-between; align-items: center; 
-            padding: 10px 20px; box-sizing: border-box; border-bottom: 1px solid #333;
-        }
-        .tabs button {
-            background: #333; color: #aaa; border: none; padding: 10px 20px;
-            margin-right: 5px; cursor: pointer; border-radius: 4px 4px 0 0;
-            font-size: 14px; font-weight: bold; transition: 0.2s;
-        }
-        .tabs button.active { background: #4CAF50; color: #fff; }
-        
-        /* Cụm thông tin và nút mô tả bên phải header */
-        .header-right {
-            display: flex; align-items: center; gap: 15px;
-        }
-        .patient-info {
-            font-size: 14px; color: #4CAF50; font-weight: bold;
-            background: rgba(76, 175, 80, 0.1); padding: 8px 15px; border-radius: 4px;
-        }
-        .desc-btn {
-            background: #2196F3; color: white; border: none; padding: 8px 15px;
-            border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;
-            transition: 0.2s;
-        }
-        .desc-btn:hover { background: #0b7dda; }
-
-        .workspace {
-            display: flex; width: 100%; height: calc(100vh - 120px);
-            padding: 10px; box-sizing: border-box; gap: 10px;
-        }
-        
-        .viewer-box {
-            flex: 1; background: #0a0a0a; border: 2px solid #333; 
-            position: relative; display: flex; align-items: center; justify-content: center;
-            border-radius: 4px; overflow: hidden; cursor: pointer; transition: 0.2s;
-        }
-        .viewer-box.active {
-            border: 2px solid #4CAF50;
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
-        .window-title {
-            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7);
-            padding: 5px 10px; border-radius: 4px; font-size: 14px; font-weight: bold; z-index: 10;
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--bar-bg);
+            border-bottom: 1px solid #333;
+            z-index: 100;
         }
+
+        .patient-selector { display: flex; align-items: center; gap: 10px; }
+        .patient-selector select {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .patient-info-basic { display: flex; align-items: center; gap: 20px; }
+        .patient-info-basic span { font-size: 14px; color: var(--text-secondary); }
+        .btn-more-info {
+            background-color: #333;
+            color: var(--text-color);
+            border: 1px solid #555;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-more-info:hover { background-color: #444; }
+
+        .patient-details-panel {
+            background-color: var(--bar-bg);
+            border-bottom: 1px solid #333;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            max-height: 0;
+        }
+        .patient-details-panel.open { max-height: 500px; overflow-y: auto; }
+        .details-content { padding: 20px; font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+        .details-content h4 { color: var(--text-color); margin-bottom: 10px; margin-top: 15px; }
+        .details-content h4:first-child { margin-top: 0; }
+        .details-content ul { margin-left: 20px; margin-top: 5px; }
+
+        .series-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 15px;
+            padding: 15px;
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #333;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .series-thumbnail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #000;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .series-thumbnail:hover { transform: translateY(-3px); border-color: #555; }
+        .series-thumbnail.active { border-color: var(--accent-color); }
+
+        .thumbnail-img-box {
+            width: 100%;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+        .series-thumbnail img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .series-thumbnail span {
+            font-size: 11px;
+            text-align: center;
+            color: #ddd;
+            padding: 5px;
+            width: 100%;
+            display: block;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .viewer-main {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000000;
+            position: relative;
+            cursor: grab;
+            overflow: hidden;
+        }
+        .viewer-main:active { cursor: grabbing; }
+
+        #main-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
         .slice-info {
-            position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7);
-            padding: 5px 10px; border-radius: 4px; font-size: 14px; color: #00e5ff; z-index: 10;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 16px;
+            color: #00ff00;
+            background-color: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 4px;
         }
-        .viewer-box img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
-        .placeholder-text { color: #555; font-size: 14px; font-style: italic; text-align: center; }
 
-        #loading-screen {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
-            background: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; z-index: 50; display: none;
+        .viewer-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.3);
+            font-size: 30px;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: none;
         }
-        .progress-bar { width: 300px; height: 10px; background: #333; border-radius: 5px; margin-top: 10px; overflow: hidden; }
-        #progress-fill { height: 100%; background: #4CAF50; width: 0%; transition: width 0.1s; }
+        .viewer-main:hover .viewer-nav { display: block; }
+        .viewer-nav:hover { color: var(--accent-color); }
+        .viewer-prev { left: 20px; }
+        .viewer-next { right: 20px; }
 
-        .controls {
-            width: 100%; padding: 10px 20px; background: #111; 
-            display: flex; justify-content: center; align-items: center; box-sizing: border-box;
+        /* Chữ ký bản quyền */
+        .footer-copyright {
+            background-color: #0a0a0a;
+            color: #444;
+            text-align: center;
+            font-size: 11px;
+            padding: 5px 0;
+            letter-spacing: 1px;
+            border-top: 1px solid #1a1a1a;
+            text-transform: uppercase;
         }
-        input[type="range"] { width: 100%; max-width: 800px; cursor: pointer; }
-
-        /* --- CSS CHO CỬA SỔ MÔ TẢ (MODAL) --- */
-        .modal {
-            display: none; position: fixed; z-index: 100; left: 0; top: 0;
-            width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);
-            justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background-color: #1a1a1a; padding: 20px 30px; border: 1px solid #4CAF50;
-            width: 80%; max-width: 600px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            position: relative; line-height: 1.6;
-        }
-        .modal-content h2 { margin-top: 0; color: #4CAF50; border-bottom: 1px solid #333; padding-bottom: 10px;}
-        .close-btn {
-            color: #aaa; position: absolute; top: 15px; right: 20px;
-            font-size: 28px; font-weight: bold; cursor: pointer;
-        }
-        .close-btn:hover { color: #fff; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="tabs">
-            <button class="active" onclick="loadPatient(1)">Bệnh nhân 1</button>
-            <button onclick="loadPatient(2)">Bệnh nhân 2</button>
-            <button onclick="loadPatient(3)">Bệnh nhân 3</button>
+    <div class="top-bar">
+        <div class="patient-selector">
+            <label for="patient-dropdown">Chọn ca chụp: </label>
+            <select id="patient-dropdown" onchange="changePatient(this.value)">
+                <option value="patient1">Bệnh nhân 1</option>
+                <option value="patient2">Bệnh nhân 2</option>
+                <option value="patient3">Bệnh nhân 3</option>
+            </select>
         </div>
-        <div class="header-right">
-            <div class="patient-info" id="patient-info">Tuổi: -- | Giới tính: --</div>
-            <button class="desc-btn" onclick="openDescription()">Xem mô tả</button>
-        </div>
-    </div>
-
-    <div id="desc-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeDescription()">&times;</span>
-            <h2>Mô tả ca bệnh - Bệnh nhân <span id="modal-patient-id">1</span></h2>
-            <div id="modal-desc-text">Nội dung mô tả sẽ hiện ở đây...</div>
+        <div class="patient-info-basic">
+            <span id="patient-age-gender"></span>
+            <button class="btn-more-info" id="toggle-details-btn" onclick="togglePatientDetails()">Xem thêm thông tin</button>
         </div>
     </div>
 
-    <div id="loading-screen">
-        <h3>Đang tải dữ liệu lát cắt...</h3>
-        <div class="progress-bar"><div id="progress-fill"></div></div>
+    <div class="patient-details-panel" id="patient-details-panel">
+        <div class="details-content" id="patient-details-content"></div>
     </div>
 
-    <div class="workspace">
-        <div class="viewer-box active" id="box-bone" onclick="setActivePane('bone')">
-            <div class="window-title">Cửa sổ 1</div>
-            <img id="img-bone" alt="Bone Window">
-            <div class="placeholder-text" id="ph-bone">Đang chờ link ảnh...</div>
-            <div class="slice-info">Lát cắt: <span id="slice-bone">0</span> / <span id="total-bone">0</span></div>
-        </div>
+    <div class="series-container" id="thumbnail-container"></div>
 
-        <div class="viewer-box" id="box-parenchyma" onclick="setActivePane('parenchyma')">
-            <div class="window-title">Cửa sổ 2</div>
-            <img id="img-parenchyma" alt="Parenchymal Window">
-            <div class="placeholder-text" id="ph-parenchyma">Đang chờ link ảnh...</div>
-            <div class="slice-info">Lát cắt: <span id="slice-parenchyma">0</span> / <span id="total-parenchyma">0</span></div>
-        </div>
+    <div class="viewer-main" id="viewer-area">
+        <img id="main-image" src="" alt="CT Scan">
+        <div class="slice-info" id="slice-counter">Lát cắt: 0 / 0</div>
+        
+        <div class="viewer-nav viewer-prev" onclick="changeSlice('prev')">&#10094;</div>
+        <div class="viewer-nav viewer-next" onclick="changeSlice('next')">&#10095;</div>
     </div>
 
-    <div class="controls">
-        <input type="range" id="slice-slider" min="1" max="1" value="1" disabled>
+    <div class="footer-copyright">
+        web by hoàng văn cường no coppy right
     </div>
 
     <script>
         const database = {
-            1: {
-                info: "Tuổi: 60 năm | Giới tính: Nữ",
-                description: "Khối u kích thước lớn ở vùng hốc mắt. Bệnh nhân có tiền sử đau nhức kéo dài. <br><br><b>Đặc điểm hình ảnh:</b><br>- Cửa sổ xương: hình ảnh dạng khối xâm lấn vào xương hốc mắt.<br>- Cửa sổ nhu mô: khối tăng tỉ trọng ở vùng hốc mắt.",
-                boneLinks: [
-                    "https://prod-images-static.radiopaedia.org/images/539561/f06590f70d6cdbd42afc1b154c4dac.jpg", "https://prod-images-static.radiopaedia.org/images/539562/a68bf03db8bbd2a0afbb7759e8e83d.jpg", "https://prod-images-static.radiopaedia.org/images/539563/585558177d0d4202c00fb160238022.jpg", "https://prod-images-static.radiopaedia.org/images/539564/b18dfd15d941557020e88d01481a0d.jpg", "https://prod-images-static.radiopaedia.org/images/539565/26ec18eb99cddc8479755f3f178dfe.jpg", "https://prod-images-static.radiopaedia.org/images/539566/52591e9d6c845f92d5478c398d0a2a.jpg", "https://prod-images-static.radiopaedia.org/images/539567/1f094aa4f42335f1b7adb3804afb7f.jpg", "https://prod-images-static.radiopaedia.org/images/539568/cc83d07fe96953e975200ead7aefdf.jpg", "https://prod-images-static.radiopaedia.org/images/539569/38e78367b0259f71739a76f79d13b8.jpg", "https://prod-images-static.radiopaedia.org/images/539570/5ac45ed0e99b6105f9bf0459792a2c.jpg", "https://prod-images-static.radiopaedia.org/images/539571/00970055122e8575d06e96b3353531.jpg", "https://prod-images-static.radiopaedia.org/images/539572/a7f3229f9014d311df39aa020ae8a2.jpg", "https://prod-images-static.radiopaedia.org/images/539573/ee9c0d4167f8ca323bf63a71cce3f5.jpg", "https://prod-images-static.radiopaedia.org/images/539574/f5bb59f20f61127380f00da533de0b.jpg", "https://prod-images-static.radiopaedia.org/images/539575/2a8fa4b193bb65cb7a3322807a8288.jpg", "https://prod-images-static.radiopaedia.org/images/539576/597a6a5871cb17910684db2b968a79.jpg", "https://prod-images-static.radiopaedia.org/images/539577/93a76b035be35a7b79b71e27ea7c3f.jpg", "https://prod-images-static.radiopaedia.org/images/539578/e5224a9925af44acac74649826122b.jpg", "https://prod-images-static.radiopaedia.org/images/539579/382d55ec1e5170ceb5f1fbdc42b6dc.jpg", "https://prod-images-static.radiopaedia.org/images/539580/c552fab45ad750aa46a1e532e315ad.jpg", "https://prod-images-static.radiopaedia.org/images/539581/3797d14247ebff35b266fbed7aa229.jpg", "https://prod-images-static.radiopaedia.org/images/539582/bcc0b24336f15d6c0c612e32b4fb37.jpg", "https://prod-images-static.radiopaedia.org/images/539583/c2121639dfed0951491e7b907a635f.jpg", "https://prod-images-static.radiopaedia.org/images/539584/c8a2bdf2c92a2b3ceec6de82e39d71.jpg", "https://prod-images-static.radiopaedia.org/images/539585/aeaa75cbefe42c1ce73d56a1db411b.jpg", "https://prod-images-static.radiopaedia.org/images/539586/a24be240953e98036852e2bbb8a038.jpg", "https://prod-images-static.radiopaedia.org/images/539587/7ef00e40081b8026c5a6c878178b43.jpg", "https://prod-images-static.radiopaedia.org/images/539588/0c40189ce63da9f579875a328daeef.jpg"
-                ],
-                parenchymaLinks: [
-                    "https://prod-images-static.radiopaedia.org/images/539589/edc66c0cd12d3d522a1d0eb7410417.jpg", "https://prod-images-static.radiopaedia.org/images/539589/edc66c0cd12d3d522a1d0eb7410417.jpg", "https://prod-images-static.radiopaedia.org/images/539593/f1f0c615fb079c6e02336b25778f65.jpg", "https://prod-images-static.radiopaedia.org/images/539595/7ebd9235bd79faa0dd56e7f2a99817.jpg", "https://prod-images-static.radiopaedia.org/images/539597/e56b8e73bfd2455108458bb4378496.jpg", "https://prod-images-static.radiopaedia.org/images/539599/b0a03cb60075e39eb009cf2b153520.jpg", "https://prod-images-static.radiopaedia.org/images/539601/e15405f6eb916ea970e8cf2b58f2f5.jpg", "https://prod-images-static.radiopaedia.org/images/539603/c9cfde82ed399b6ca2275254014487.jpg", "https://prod-images-static.radiopaedia.org/images/539604/e3dc4a8197fa9601554bfce6c72d3c.jpg", "https://prod-images-static.radiopaedia.org/images/539606/32c14ac231905bd2d6dd6b47245930.jpg", "https://prod-images-static.radiopaedia.org/images/539609/30cc091f8978a37286b5584cfd8cc4.jpg", "https://prod-images-static.radiopaedia.org/images/539610/764b7e7434d833ad56098cfe386bfe.jpg", "https://prod-images-static.radiopaedia.org/images/539612/ad1455917994663109e4d943476a68.jpg", "https://prod-images-static.radiopaedia.org/images/539615/e84d11ddcd4b31fd4278f4b55c77a8.jpg", "https://prod-images-static.radiopaedia.org/images/539616/e2796ac0a9f6c91fd9652828bcda20.jpg", "https://prod-images-static.radiopaedia.org/images/539619/fe9e89fa6ca470ff647a0bb758f6be.jpg", "https://prod-images-static.radiopaedia.org/images/539621/8beb1a1f0d34c4bf8cf6a5e6290aee.jpg", "https://prod-images-static.radiopaedia.org/images/539622/0acdc06a956b5d121655e49d31f591.jpg", "https://prod-images-static.radiopaedia.org/images/539625/47b656c21e950e869bf202f4ce1499.jpg", "https://prod-images-static.radiopaedia.org/images/539627/c519d23d2a7d14896a737d80ba48df.jpg", "https://prod-images-static.radiopaedia.org/images/539628/ef04e26d518ab16a54363a8ba3c7a0.jpg", "https://prod-images-static.radiopaedia.org/images/539631/87e97f855018ef39e04ba07a3506c8.jpg", "https://prod-images-static.radiopaedia.org/images/539633/f67fa110d17a3bd3a0124764e57af3.jpg", "https://prod-images-static.radiopaedia.org/images/539634/5d57963bd8715d9d28bfd87089dacc.jpg", "https://prod-images-static.radiopaedia.org/images/539637/7bc4a4b4d45c4101817430bbb36df7.jpg", "https://prod-images-static.radiopaedia.org/images/539639/5f76cb18c359dc6ef33723443eb336.jpg"
-                ]
+            "patient1": {
+                name: "Bệnh nhân 1",
+                age: 60,
+                gender: "Nữ",
+                description: "<h4>Mô tả lâm sàng:</h4><p>Đau và sưng mắt phải kèm theo lồi mắt. Đau và tê hàm trái.</p><h4>Mô tả hình ảnh:</h4><p>Có nhiều tổn thương tiêu xương trong hộp sọ và vòm sọ, nhiều trong số đó có liên quan đến sự lan rộng vào khoang ngoài màng cứng.</p><p>Ngoài ra, có một khối u phát sinh từ trần hốc mắt phải, lan rộng đến hốc mắt phải và hố sọ trước bên phải. Điều này dẫn đến tình trạng lồi mắt.</p>",
+                series: {
+                    "cua-so-xuong-axial": {
+                        name: "Cửa sổ xương (Axial)", 
+                        thumb: "https://prod-images-static.radiopaedia.org/images/64628884/4605df84d88daa34a62d303922e78049d82ca3532b761844619c13c3c3710c42.jpeg", 
+                        images: [
+                            "https://prod-images-static.radiopaedia.org/images/64628869/df30711fd6d03f74489606c2a8a1cd5d6735ccf4d14b54be02d6066cc1edb510.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628870/7df82ad5e4c650f67ff8bc1f62bac2df4429d1b77b430fd4486eb65b2adaba2a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628871/df9e83277adadb59b83ffa98ea0836306166a33df892c3521d10580c414bfd93.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628872/de4388afaead27f2205abe8bf44ebcc6990662678b08a170e6c57110a7117b22.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628873/7867f33635067545197532bad483892f4af829eeb65dda443298a6a8aa0e03f0.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628874/a863faef5956675e6ac5b4e2265d9ddae196c7b223eabb990450801f357bed4c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628875/205330fd7727e1282b94e972da5fa9b343a0a981105dcad0317f53602b7fcd30.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628876/5fa0e97f38eaa8196e2e78a455841ff44b18387aa87dba71cce39486f4b957a4.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628877/ab55666ffd5e69359435474ae2f23a7c4770fb43dffab172b44d258d24ee2f92.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628878/495fb001ae8e0aad0b7afb21067f4fe30c98408e009adce282ed94d01990e113.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628879/2d734692f855b9edf50d2365c0b2cf4e674befd000a4c6422ea4903d3b403a02.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628880/34600c6760a6266a6795f992c387ba78afd77c58aaaae68812d514f79b01a54c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628881/4183d6b0b7de3449248dab17a0349b9e33f6d10fb596636ec973191a024ec056.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628882/994004cc3cfe5bd7b6b984967220e10f1b0477338503078517d2cc2691491f10.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628883/28e23926b6d7424d134f855f174fcfe84dce513d40ae4e8dd6ac555adbd50b61.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628884/4605df84d88daa34a62d303922e78049d82ca3532b761844619c13c3c3710c42.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628885/5c2178696026254f925bc8826f4408f1aa8053af3de947413a1364be90f50664.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628886/4c465d40c471db39ed93d12130e85364a9a679b12de4bb0cc8199fe8966a8ebb.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628887/7363facf4ee1e1c87a8391e18c13cce49050c055182644d7c7a5c3ceccbc827f.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628888/e1ff0a46273e7013141f53c2da5f04c70e2b0f1432da7444f2f1da5ca0ce886d.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628889/2ca551fb93ee7161f0c0a8e22af17bc100bdf28673af14cfd88e314af46e6726.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628890/856dac9e95004ca6e098adb5ae70b7c789ff11982fa6ba6b1e2ef4de74f726a4.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628891/ed7a6ff10d59e2278eebda9336f59d245d1a470fed72151dfd653a2955b0d92d.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628892/b85b02a6dc25a21273479b8fafedef6047a6594cfa81fe81dfe94b6c553d416c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628893/af7609dafbd7053c8b64ac0ab9b711600570d58ec19cc2151bc5f15ff37e5cf5.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628894/6649ff66b20a50cf3240987e14c09d53d1a8dc2e50a7cca7992c3c1b622859d1.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628895/443af1cda2da8dde2ba8cf497c2b365731d60ca718505b65c93989e93fcd62e4.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628896/64a14a051ad1230ef3a8075e51d9328a169d2b48bc7761621e73c502e132112a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628897/b5ff0214652dd3d187efe24e63a304b9369c93dcf1a6943a5053766a64281959.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628898/22276d378c300e76c5a9203bd25851f81e004e3e186e19f0ef1c7d7c04fe63b9.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628889/ce1d26ec7b56b4f9e990ec2cfee0dcf7cd3f4f4b041099e82f261bd785ce1aa1.jpeg"
+                        ]
+                    },
+                    "cua-so-xuong-coronal": {
+                        name: "Cửa sổ xương (Coronal)",
+                        thumb: "https://prod-images-static.radiopaedia.org/images/64628994/0a5ac5da9b511ad028c37f4634bd92b0c01f2c6f38fb3a6d815434baeb4e8b4c.jpeg",
+                        images: [
+                            "https://prod-images-static.radiopaedia.org/images/64629016/6fb6fd63c4605ff9216648d1900132f5946dd91cf1b74ecb47becc0e42cd0488.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629015/39c8356b2e16ec588d18aa234371fb4303473bfa31ba31f5abfba1390c20b92a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629014/618bff6e7afb12c0bad4f178eee42ed12db14fc3e1911689e04deea02112bd5c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629013/c110c19483d76d1ba68b8a320acbfdc209b4a24c74f3b536fe5434953728f23a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629012/f9f8de4f505837b021343cee891d79bde52021bf2e912b0d78715048dfdf75af.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629011/dd1b73cc40a51ae56620101998b1e29a57e3d3c8276bab168ed73a1f8a9b8c78.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629010/d2edba020b8a51905246c87800a9ebed478e05406bb39145c275e254d722e81e.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629009/9b605e136fb0509dc529bcdc7eecae59a7555ac27facd0f36b97c868af5afad3.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629008/401711b96e492481356a6111723893ec4e487754556b59751fe67d4b8aa09f3.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629007/1bb2fe78e34f78ec1b69430e8e7799d93892596ad9dde26d86957f1b03156985.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629006/1f47a306d15b02aaf790331bef3f15b221068eba1c36d8bb5292a0cae40176db.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629005/0fe9b4bc2be9d829b248360f27b1406fed963bcad03a1c72535199834878fc49.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629004/960e8466b1e4354a586c6bd9fdfa811dbb8f85a4af63dc15e8d684f6a6b6de38.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629003/5a16dd10b6ea5d8fefc385c412faca577bf406835056ff2b96c60fe1c9e0d6bb.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629002/ab7b7d381ca0836be8a540faaa25ab61cedeb35298be6ff571d185b52c1add5a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629001/fade77a367896644fe58f2481e95c75e57fbd1f7ceb1c293b8ea67b44d042cf8.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64629000/ba3103ca0ee8d0ec3d683be4439eed5dbf8c94863681aa7bc3347cedeec78f60.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628999/eb266636bea99719447894e69f48e4f1d9ee81575eb4abdee604907b7728d3f9.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628998/cf899823d971d8e15e2a28704f4979677ef337dcb199b2bee5f93908b9b408ec.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628997/da45f391a95f607d06484f92d347d1b71a37542a28f6277d00a04391290240d0.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628996/7cd4157afd947c2f5c6d9c2593b64d943602bdd572eea5d1fa3355e6c9830ebf.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628995/0bd0c9787678bcb5202c94f15defb0105322751046308efda4d25081f808ab3a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628994/0a5ac5da9b511ad028c37f4634bd92b0c01f2c6f38fb3a6d815434baeb4e8b4c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628993/6dcc28e976119eb2816254c6c9cafda3386fb1d4eecfd7efd10ab06ef0593338.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628992/5c553a54b98586d7d4a0a88322a2d28bcf494c34006bae2a0b221da83a432a8c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628991/198ee8dee28f6f3c77ad7c91e2396a4688892a07156d49b0f9b9b7ee67dee6aa.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628990/5f7cc55d2bcc63cfe85c0c373e13c395652b54f89e794289218394f21aa2e3ec.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628989/2b4814e7a62779cb3941bc211aec4b310a00907c9b18e80f03896b53e72f5bfe.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628988/cf39054eb665986af5fe5c57a6aa41670f0ef04f832aec381e3bca634446608e.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628987/8bcf89187310ae4d9431d2d2276c73cd6634a1d6e7b1ae546a179001332e753e.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628986/5c07f5a7784dae8b99923adb6dac67e04c0638412d951081b79eabf337cbb059.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628985/3ba44ea42a18ef88d40084d87a18a2e2d7cbe682bd86e2b1bb2ed57caf062a6d.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628984/468c66b7221a294e38c1c56462dea03a8a598ef0a59557203fc347fc72af55b0.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628983/1e1830bda985c493c4bd729c3fc2ed68100833638af3133f716c218af03b01b5.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628982/84f2ec2d68ba86f83fc9b4bb2d5fa7dd9763427893f6f75bc7e987998e8e41e4.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628980/647c7313da9d21ff765e60f0c647f78230b0b19cfa999d45930142027bc9fc4b.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628979/ec329a96570c35f9342eb2b8b2ecbab5152225345908370f8e4df42f55fac891.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628978/40a26e038639d4b79035aaabe7d8e2d3c1f379097dd690412dfff1e58b21358a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628977/8238436f0d8d8d782dce8236e71e77542f07203c278e163eecfd74396d739c9e.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628976/08ffa24aabbeafd0c6a7b1cdd63ac9325c51178e2c4e9ad04081f5a26084cef2.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628975/fe178a6c00ea2a944f817bd84fd18539047bfc447218bbec7931227292e3381a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628974/72d7d9b6633fb11e6bd813a60758ca594972789bb06d6bc7588248c8756099f5.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628973/a584abc207a7754c02a8df44bdea27d8cbbce34a4d8be2aa38eb01610c85da21.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628972/ee2f43fa60fe3f34e70358b90a51d9553794db1844cb15d0309402683be223e6.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628971/0a38f5feebf2e873cead8f0d302c10204c22c5ddfe7a4cccdd6f7ffd96d6b757.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628970/f2789c501a348229f83e3cb1621960f915b17dcfab4b239afd0c17df170bd593.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628969/a389bf3d131d40901bd1b987d2cdbc81439c28d48e1cc39b4e54406ca9523f6f.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628968/61173bd3cc4dc4148afdc39d76e1115fe2f02e90b4ec1f0d5f3f193e9fc060a0.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628967/54c1f2c11202619dc65ee447705e42d2ee68c14c0feea8222042c90d167593e7.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628966/0e517146b9e5a9814acd000709b9f2ee805a6b8aedc2ce2c51f4eaa57a64f317.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628965/5e1e4bbea1b019f0c6ee9004c526c88c57acfaf1690c7305ff8217cc4888d89c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628964/67f1fd42ede6f2a2dff270af7d38fe6c11a38406f2b526fe32403cb0de9d265a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628963/3f0076812164124692333d29c8fa039e4921a8541a5dacb051750725ced086e0.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628962/c80573eff60514d7b7ed8f13020ae85cf207eb2bb203f0e6adc2744119f9689b.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628961/ec44ac44010784587b3ceeceb2c1c87460622713807c0b77b8899b003bfe52a5.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628960/dd8040d49f251441874442b664839d7ae4389409b29941cccc206eccfcc7e815.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628959/9171d578e5ac996a2516a1acaf8cd8b6a696d76dba709ec62b202a96b88bead1.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628958/b8d30797c432176936452027878fde12c11bfef6ce53de640eab4fa97343202c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628957/0ab2b86a75374df8ef8e324c0e0d5c79c3e5b53868f50bb20f9b6d315f3d4169.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628956/c4bffa84f952db214374cf8aef78264e140bb04b572be01ffa59d6db8b376a9d.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628955/62ea113fe10b83521776abeccde6d04bfd8a476b375a48fcb73fb4c612e37d05.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628954/2cd37850211217c46133d62c9c46971bbc91f1726e6c96d93a91e72c29ca038f.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628953/2348cb83908e4717463f23f681fb488fbe5fcc8d877d9810d89aa013252ebe8d.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628952/a08cd1bc4ca47dbd11d037bf4af1f4fd74cf8108156c8eae5defdb2ef224c601.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628951/99162a57af80aa6fe5b6b1ec082bb6aa2fa870bc073610b2e1b30b88dcfe4411.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628950/4bf5ab94753b7d2a2c82416b3e5df6fd339866929878c32cd6178e306d40cf8f.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628949/e9c66a37c994eb446ee2083aa93ea2112bd607cb1622899b0ad0957c4e2fd5bd.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628948/c5a43a05c933f4907fa15d1f3c60c75e0dbc8aff43d50a96114ff03abaea0531.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628947/66c6ccca873b5045abf1a7e71726465dccc8e846168eff6b46eaf53707c8dba5.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628946/9b6519701a2dd8d067a2a66857896e1180d6911cbc7083c99bd2bdef14e54a43.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628945/07abeeed2f5ec83abf069fc4303ee22716c7ed40caf68f91ce9ef18ea80a1ff8.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628944/5965cf4e52be9e0be219debebc5324bd9307dcb9f2c25840b3c9b641a4ca79c3.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628943/4c4419870519c39f8e1dde915be1797e4b354093462314a1221b63fa16dd174e.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628942/3cb782e989b462649bfa242ac02a6125a191e680d91783fbf7e2a2dc0eb869a3.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628941/20af42dd313173d42b1b442456ff4cf56ac96bdc2fe8d2a2af69f0b70105e124.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628940/22ac75a7237e550c5923d9b7780a0ad28e29b4be8fa3ebc82662e1f7bd270d02.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628939/d748e6b6a7f9d5516e53147b486c443bd2d906ce18c79ef1719452398165192a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628938/2a089bfa2a585f7a59267c6cd082b81288171b9f5a025da21f209b2dcad8e031.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628937/f65b44acf472ecd8d8bc09e818676ed31450717b9239631b3b268f857a937437.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628936/54889b565d1a6b90c1ac6411b83f7ac288f26ca33c56c374520c5878b124413e.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628935/47bea94cb0e5924d4950b1992a7d33082033c47ad199fc204bbc038a9661d3a8.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628934/939ce0da02d15e3ec73d86d459765fb5e0194902b100a8051d984c32ad666baf.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628933/afd520df53221986852c0952f70b5164f5bd65ef64ca72aa82087a6c3b25feb4.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628932/84b0c20c239a2e7a7cede8730a2cc5f7e68c86459762d22e2563097ab1503a9b.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628931/b35347f0bf7b08a0b0f7d402a1c4866dd8211a69b5cd8c8405235bc8f307bea1.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628930/9fa15ce01028b3bf010813a3a1861dd71ab9022e08894bb44916ea9796be62ec.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628929/2cfe4884809f5be04029dcde4c57a2ca5611720109d2295b61721d4b736b09e5.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628928/153e0e378a013b9b0ed1335fb0ff8e7f6dd9469e2b9026e826ea485f5479969b.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628927/4ae65022bd4dd7101a93b6b40e7668ce4cdad1f8f86db1d604a4d48742dd57d0.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628926/1559f9099ee6a3cbbf60e56ba7619c5219fb05d2c6f950d527d93c378f7455ea.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628925/6336734657ae4c33ee3526b7f7d1b9c47490ab1577f79c8307a0e0b215d5b404.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628924/8dabd4d93c1419de74f8cfd7a686a841cfbdab8b3a1f4777ecd88f1015e6d2ef.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628923/87ad6474c9d902fce85485e2a4fe434d80c8b2ed272af92498d757d3b3daa209.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628922/76987024e74902c5a92be293c0c62f959ca11ef9d973ec395abd835b4389dd29.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628921/ee2abb1fdd8051b1dd4abb0e639bd38d6696fd651a0ebf77912eb844282bf30d.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628920/67e3a752f80ac66677ad4896de1d06df4cafb230ad6d649abde888665531a409.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628919/38faf0d325a71ffafac0db207cc087898ef85fbaabbc1e7f94af576a9a400b97.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628918/5062cb38f5c4d1b8cdef9940ee7b474585b228667666b3eef0df53cadda84cec.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628917/917c2809104dbd111bc27d29209b177ea565930e22e516dece0288094965d17c.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628916/bd69fc0016620253b4e3a698c9e591dbc7ad4379a9cd51049330da78cf9cf46d.jpeg"
+                        ]
+                    },
+                    "cua-so-nhu-mo": {
+                        name: "Cửa sổ nhu mô (Axial)",
+                        thumb: "https://prod-images-static.radiopaedia.org/images/64628850/00c5e7ab72051303b457a93fb13030287f8d34151473b18cad612635270c16f1.jpeg",
+                        images: [
+                            "https://prod-images-static.radiopaedia.org/images/64628837/02bc24bb09490bc6658e40be441656899cd0b69f5f41f05b1b3ac9970aca8423.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628838/4738a6a7a5c1659b669a8d954a4a86672e014d13dcff84d654197229506115a5.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628839/dcace3623d423d11c8c5978c01bbe41bfc226d5db1fe70396750a4bde4701812.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628840/8fdfcae45b272474027cd0802bd10e66110f584fe4d538db8a5521a05001910b.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628841/d17c57ddce00dfb974e0a55a62b0bee6c6213b5497e9db9d04039e8cd0367815.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628842/2f81546f1a15a4fb1b720adf19ab9c82415600b91af1a621c53d608b7b3307ad.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628843/9cf2ab1e936aae04206242926549f6b86f327204b5ae784b774ce09743503c23.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628844/f7eb7725f1ea562b8a723be9125f2772ff37b095fb95c52f6253be697f9c5668.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628845/7d9f87c04f90015278f7a352e2bfb3e20146651b6515212345cde34957cf77dd.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628846/49671e1d0669e0a7a967df3dd97895befd8583a932af3c0720de64a611c13b54.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628847/60d0107dc4abdc0a30f62bdf0d7cf4352b4518f2627a78d9cc5e8998fa12b2cc.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628848/10031205e858c99b3c0d697b88ca1d39265535deca6de973bd7f4570e7d94269.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628849/95d55db2778050f8bce454bb9594e7d11e68c937d07963d46b63f40131e0bd14.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628850/00c5e7ab72051303b457a93fb13030287f8d34151473b18cad612635270c16f1.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628851/072d9674a0cf1068ae10ca1e3c0c8c650dafc9bcc5663e27275f3f27638da7e3.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628852/843ca54faaa83b0525a120b8106374118589e8567ccaa6be9c6d31486b86eb65.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628853/afa4a7a04e6d396a1a2e5792776b813614250d824d66844f5d2f25f92a873d41.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628854/f5919d015e28c32ca3e350f837f2aff0bd5a544200828f05346792084dde55e2.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628855/5ade7d80514c049f8102a5d3564621dab4170b138bfcd806b456013683dda62f.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628856/7bc838b87929b3d00ed8b5088ae8c32344522c416e0eb61a1a3a1232fc15fb0a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628857/225b241e0d0af0d6e31391ee404e10665ca6ca50da8e022bd6e0f5b9cef2537a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628858/d5d9fc51c8b70f9bc381140f135d4c0e69cd82993dae70b4fc02d27aaf92be6a.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628859/2bf7c7c809b33e826ea63cf69966ec40b6af8bd18e4603092256ba040c575ca0.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628860/b40a392771075fe671d1681f095c422982507d43e1c7930252d6f36eac03eb30.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628861/ae379f93ab0114c26925b5870616448b87087b5ecc7b6bfb37801419a1d1d111.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628862/ed077f3c064f86205ff52d7e6ba9e4e99a0023faf64f605c31694dd98c332fa5.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628863/af83dae6f024b6c53ddc318c1d87881390dbe7e8cbcb6a5faec7eea81197c729.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628864/9aa55cee09c55acaf3ecf68308e3fb6295917fc74787630fc0b79305ce76dd72.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628865/bbf176308b56c26e47cd3b28dd0ac1e4e4abdb505f978273e66170eb7d073548.jpeg",
+                            "https://prod-images-static.radiopaedia.org/images/64628866/08303a41fb50542f9b69f063e22307ce2e9a916339f213712b8798c4e06a41bd.jpeg"
+                        ]
+                    }
+                }
             },
-           2: { 
-                info: "Tuổi: 55 | Giới tính: Nam", 
-                description: "Bệnh nhân đau ngực và ho ra máu.. Bệnh nhân có tiền sử đau nhức kéo dài. <br><br><b>Đặc điểm hình ảnh:</b><br>- Cửa sổ xương: Phá hủy vỏ xương sườn và gây tiêu một số đốt sống ngực. ",
-                boneLinks: [
-                    "https://prod-images-static.radiopaedia.org/images/3084882/baf782da768510887c298139141d41_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084883/aa483917a5077e624f75ab27298506_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084884/7331f3042dffd503557f5679e2d879_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084885/37385b77d249afb4cd3bacee2e2fab_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084886/faac50b074da33e2181f33ffd50a19_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084887/5a82c84f9c3f55d73675475bb25033_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084888/f9bc33228bb994df2855ab8ffb18a4_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084889/beb5af04dd584c838e498c049d4470_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084890/cd0604875a6eb13826e13b0acad917_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084891/c3b27242c3fd2088043444e31a7d07_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084892/489ad6abbd32feed3c3b4ba9708154_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084893/c7efe92381be3610f8f74841518184_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084894/f97ed02468a2fd600ec386e41ffb1e_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084895/5db378d9f35329277780eb46289e32_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084896/3cd87623df91bf89ee2915d61ce7a3_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084897/2608690480259d22895073452504a7_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084898/7c84d8c008df390914c33f8d14d368_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084900/565dbefdec763ad1032704f4c2a2c5_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084904/132e1bde65a32fb4b42d7577c445fd_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084906/62097031e1fb04511854ca7078dc97_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084908/0dcbda7bd8df4f7ce54abb3eaa28d3_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084910/b24c1aa22bbca387e81ff396bef013_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084919/83062bfec7302f0e12c9fdd7398bb5_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084922/6fde5b19c11ede419c8a19dbd1daff_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084923/132a520ff7423ec9d6ff43913a43c3_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084926/32abf4c5ee9e413d1d6517aa13cb5e_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084928/0e8a200dda2e490f601c9c2a2e74c5_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084930/fafff1176cefdaec6acfce0bdd1bc0_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084932/bbb2e058e8c1fd9f11f1700a302316_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084934/e0021c450253265e66f97dee815012_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084934/e0021c450253265e66f97dee815012_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084936/3ea27844824ca39afcab0b914b9cb7_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084938/9b2eb6e67844ec3a654f5d0d3c3aa3_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084939/9e8f3771c724389d9757cc4717177e_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084941/511c82db5682b7c969d0c453833468_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084943/7e564156ed58869a03978e8e5b08ca_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084946/49beda303847981ce02e96c0df2b77_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084948/6c8caf300cb8e1edb7465ed415cebe_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084950/5ae6004c843d290ef62b6ae0afef98_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084952/3d5f0a023332b875b38edb1044b21e_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084954/908488f8703c33a210a781415c1525_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084956/d8f94d5a1e1233e6a7220530153537_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084958/7aab1893076ba52b64c286e6d33019_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084960/1c92431e67096a1c38856b626304e3_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084962/5a2f545a985463f4a0033e47fc7583_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084962/5a2f545a985463f4a0033e47fc7583_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084966/feede141a2836bc192362f148aed4c_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3084969/b9de12d906f4f3be963358881161cf_big_gallery.jpg"
-                ],
-                parenchymaLinks: [
-                    "https://prod-images-static.radiopaedia.org/images/3085540/fae7dc60160e7dc7435664a5e6b420_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085541/db19dede12bc184d29b47fa0fba772_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085542/15b9d6add9d6b48709a575d0be8aa3_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085543/f73b07e5e57ebe41138ca99fcceea6_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085544/2bb9b6f9c9109684d66afa7e0f17ed_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085545/66fe87e1f7a2f591ce3edbe9820682_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085546/69d0c704346d1424ae3fe30f1546a1_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085547/b10bad0dbc470ad3d0e7ec5329c644_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085549/3ba326df135d29294fbae6fb574133_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085552/789ff9b7997ee6a0879f47943a391b_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085553/415d17edceb790875f172e8bb5d82a_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085556/f3939371eb5db7063d8f093faeeb27_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085558/20d1b075383711c46dadf45a6bd957_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085560/f008170fbb9610980093d486407c0d_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085562/5d53672c391828e059bc15d27bb19b_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085563/55c7f954ca3fa80b8d74b8dc9ef1f4_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085566/bbde8cbec3ba47f675aefe2518a0bf_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085568/bc810583dc85b8746a7343ba2a7ba6_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085570/da5ca5448be418e22b00341fc41288_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085571/dde474ec6eb454eccd077e8fcf188f_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085573/60a742c7f4b60b8bbebb2c61253145_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085575/cd9d16935050f81a5f1a937ec1f58f_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085578/c7717b2908020054550a4ade3751b5_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085580/a542f3cb3c3808dcbc80491ca477ef_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085582/4b64e2fb1e029b3bcf7cfb4bdcf497_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085583/93856d173d6acabd5591f13bd9791e_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085585/38f9aa38d394f61e567a52adec8921_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085587/d00020252de417c5d1a197ead60263_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085589/bdab3d690f81aad9c044a948af63df_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085591/b31cd087f2421afcd5c0fe0a9be336_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085593/d1532e42ea980a5c883f6e8f760283_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085593/d1532e42ea980a5c883f6e8f760283_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085596/ede7d686dd3f0620ac6fc6e93f5fc8_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085598/77fd5a15091e11245f8ecea73d84ba_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085600/ab75ace12886bcfa1d1a9a3a0bee20_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085602/5d322f2f08b6d28c236b513077e128_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085603/38d2635e2786f98f1e3f85869c1d61_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085606/06043a7af56e2188fee669860dcc8b_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085607/33455eb16f18e01be6520b5f5339ce_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085607/33455eb16f18e01be6520b5f5339ce_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085610/a153705cf73afef6ab96c925e62206_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085625/aa767e340d083415528d43faef2d4c_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085626/291a47cfa3b91e1844e1969973fe2b_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085628/fffc744d3f63803d07ea460d26fc67_big_gallery.jpg",
-                    "https://prod-images-static.radiopaedia.org/images/3085629/5cdf8ccdcc30a08fa37710b927e322_big_gallery.jpg"
-                ]
+            "patient2": {
+                name: "Bệnh nhân 2",
+                age: 55,
+                gender: "Nam",
+                description: "<h4>Mô tả lâm sàng:</h4><p>Bệnh nhân đau ngực và ho ra máu. Bệnh nhân có tiền sử đau nhức kéo dài.</p><h4>Đặc điểm hình ảnh:</h4><ul><li><b>Cửa sổ xương:</b> Phá hủy vỏ xương sườn và gây tiêu một số đốt sống ngực.</li></ul>",
+                series: {
+                    "cua-so-xuong-axial": {
+                        name: "Cửa sổ xương (Axial)",
+                        thumb: "https://prod-images-static.radiopaedia.org/images/3084926/32abf4c5ee9e413d1d6517aa13cb5e_big_gallery.jpg",
+                        images: [
+                            "https://prod-images-static.radiopaedia.org/images/3084882/baf782da768510887c298139141d41_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084883/aa483917a5077e624f75ab27298506_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084884/7331f3042dffd503557f5679e2d879_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084885/37385b77d249afb4cd3bacee2e2fab_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084886/faac50b074da33e2181f33ffd50a19_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084887/5a82c84f9c3f55d73675475bb25033_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084888/f9bc33228bb994df2855ab8ffb18a4_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084889/beb5af04dd584c838e498c049d4470_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084890/cd0604875a6eb13826e13b0acad917_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084891/c3b27242c3fd2088043444e31a7d07_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084892/489ad6abbd32feed3c3b4ba9708154_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084893/c7efe92381be3610f8f74841518184_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084894/f97ed02468a2fd600ec386e41ffb1e_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084895/5db378d9f35329277780eb46289e32_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084896/3cd87623df91bf89ee2915d61ce7a3_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084897/2608690480259d22895073452504a7_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084898/7c84d8c008df390914c33f8d14d368_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084900/565dbefdec763ad1032704f4c2a2c5_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084904/132e1bde65a32fb4b42d7577c445fd_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084906/62097031e1fb04511854ca7078dc97_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084908/0dcbda7bd8df4f7ce54abb3eaa28d3_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084910/b24c1aa22bbca387e81ff396bef013_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084919/83062bfec7302f0e12c9fdd7398bb5_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084922/6fde5b19c11ede419c8a19dbd1daff_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084923/132a520ff7423ec9d6ff43913a43c3_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084926/32abf4c5ee9e413d1d6517aa13cb5e_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084928/0e8a200dda2e490f601c9c2a2e74c5_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084930/fafff1176cefdaec6acfce0bdd1bc0_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084932/bbb2e058e8c1fd9f11f1700a302316_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084934/e0021c450253265e66f97dee815012_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084934/e0021c450253265e66f97dee815012_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084936/3ea27844824ca39afcab0b914b9cb7_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084938/9b2eb6e67844ec3a654f5d0d3c3aa3_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084939/9e8f3771c724389d9757cc4717177e_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084941/511c82db5682b7c969d0c453833468_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084943/7e564156ed58869a03978e8e5b08ca_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084946/49beda303847981ce02e96c0df2b77_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084948/6c8caf300cb8e1edb7465ed415cebe_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084950/5ae6004c843d290ef62b6ae0afef98_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084952/3d5f0a023332b875b38edb1044b21e_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084954/908488f8703c33a210a781415c1525_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084956/d8f94d5a1e1233e6a7220530153537_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084958/7aab1893076ba52b64c286e6d33019_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084960/1c92431e67096a1c38856b626304e3_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084962/5a2f545a985463f4a0033e47fc7583_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084962/5a2f545a985463f4a0033e47fc7583_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084966/feede141a2836bc192362f148aed4c_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3084969/b9de12d906f4f3be963358881161cf_big_gallery.jpg"
+                        ]
+                    },
+                    "cua-so-trung-that": {
+                        name: "Cửa sổ trung thất",
+                        thumb: "https://prod-images-static.radiopaedia.org/images/3085573/60a742c7f4b60b8bbebb2c61253145_big_gallery.jpg",
+                        images: [
+                            "https://prod-images-static.radiopaedia.org/images/3085540/fae7dc60160e7dc7435664a5e6b420_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085541/db19dede12bc184d29b47fa0fba772_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085542/15b9d6add9d6b48709a575d0be8aa3_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085543/f73b07e5e57ebe41138ca99fcceea6_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085544/2bb9b6f9c9109684d66afa7e0f17ed_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085545/66fe87e1f7a2f591ce3edbe9820682_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085546/69d0c704346d1424ae3fe30f1546a1_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085547/b10bad0dbc470ad3d0e7ec5329c644_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085549/3ba326df135d29294fbae6fb574133_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085552/789ff9b7997ee6a0879f47943a391b_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085553/415d17edceb790875f172e8bb5d82a_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085556/f3939371eb5db7063d8f093faeeb27_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085558/20d1b075383711c46dadf45a6bd957_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085560/f008170fbb9610980093d486407c0d_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085562/5d53672c391828e059bc15d27bb19b_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085563/55c7f954ca3fa80b8d74b8dc9ef1f4_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085566/bbde8cbec3ba47f675aefe2518a0bf_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085568/bc810583dc85b8746a7343ba2a7ba6_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085570/da5ca5448be418e22b00341fc41288_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085571/dde474ec6eb454eccd077e8fcf188f_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085573/60a742c7f4b60b8bbebb2c61253145_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085575/cd9d16935050f81a5f1a937ec1f58f_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085578/c7717b2908020054550a4ade3751b5_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085580/a542f3cb3c3808dcbc80491ca477ef_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085582/4b64e2fb1e029b3bcf7cfb4bdcf497_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085583/93856d173d6acabd5591f13bd9791e_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085585/38f9aa38d394f61e567a52adec8921_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085587/d00020252de417c5d1a197ead60263_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085589/bdab3d690f81aad9c044a948af63df_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085591/b31cd087f2421afcd5c0fe0a9be336_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085593/d1532e42ea980a5c883f6e8f760283_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085593/d1532e42ea980a5c883f6e8f760283_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085596/ede7d686dd3f0620ac6fc6e93f5fc8_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085598/77fd5a15091e11245f8ecea73d84ba_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085600/ab75ace12886bcfa1d1a9a3a0bee20_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085602/5d322f2f08b6d28c236b513077e128_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085603/38d2635e2786f98f1e3f85869c1d61_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085606/06043a7af56e2188fee669860dcc8b_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085607/33455eb16f18e01be6520b5f5339ce_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085607/33455eb16f18e01be6520b5f5339ce_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085610/a153705cf73afef6ab96c925e62206_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085625/aa767e340d083415528d43faef2d4c_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085626/291a47cfa3b91e1844e1969973fe2b_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085628/fffc744d3f63803d07ea460d26fc67_big_gallery.jpg",
+                            "https://prod-images-static.radiopaedia.org/images/3085629/5cdf8ccdcc30a08fa37710b927e322_big_gallery.jpg"
+                        ]
+                    }
+                }
             },
-            3: { 
-                info: "Tuổi: 15 | Giới tính: Nam", 
-                description: "Đau hông bên phải kéo dài vài tuần. <br><br><b>Đặc điểm hình ảnh:</b><br>- Một tổn thương xương phá hủy kèm theo phản ứng màng xương nghi ngờ, tập trung ở xương chậu phải, với thành phần mô mềm ngoài xương liên quan đến các cơ chậu và cơ mông nhỏ cùng bên.",
-                boneLinks: [
-                    "https://prod-images-static.radiopaedia.org/images/71637336/51d3ee79ba9d7a2420949c64ed20d6778d3388ba5a2e91fd4a01b4a5a7e7b8ad.png", "https://prod-images-static.radiopaedia.org/images/71637337/1856320aa7ea282184cdbc4809d2ef5ed5df670654ebaa975d0b7289ad2079df.png", "https://prod-images-static.radiopaedia.org/images/71637338/c354b4c2975b361c276792168b0f35dc31ba541fa539277faa27ef98a6445d17.png", "https://prod-images-static.radiopaedia.org/images/71637339/9f8065f2a0f4cc4a3bfe03f516006f9ccf7a240df455cc51dc2ad45222e34b0d.png", "https://prod-images-static.radiopaedia.org/images/71637340/a99d05f33bdb074c0655061d5d3c727bc293c87b1f707bef6581390f76aeaf12.png", "https://prod-images-static.radiopaedia.org/images/71637341/882bd4018d6ed36dd5a644c054d88d216c59707d1f2db516223c396908322a76.png", "https://prod-images-static.radiopaedia.org/images/71637342/e7c4968d97fddea1f0995680f8727466d57c5183318c3294f702a4b50c5a2a3f.png", "https://prod-images-static.radiopaedia.org/images/71637343/0281564b9801a98224c0e21080d92cff030e6475b7a1ea4505a5862a79d6e158.png", "https://prod-images-static.radiopaedia.org/images/71637344/832fd078fb63ad75d40eb5c1da5a015e4dd1fba8b3d74b8d4f8aeebb7a0ef24e.png", "https://prod-images-static.radiopaedia.org/images/71637345/f31b7f92963b8f02abe05f7cef9f1908e29c5fb7566716000c34bb3638650a5b.png", "https://prod-images-static.radiopaedia.org/images/71637346/8614dce85d94248e5ae5fd2d5502a294b72ec2697ba81716832f34bdf4ebe74c.png", "https://prod-images-static.radiopaedia.org/images/71637347/7b27df596d1e32ebe1bdd2935219a4c2f9a87a41adeaa9eedfcdc7fe535c8d29.png", "https://prod-images-static.radiopaedia.org/images/71637348/d8c7e6bdf4a953173f6246a9d91be15e12be6bd90c3e485f5712fe9ae4a38457.png", "https://prod-images-static.radiopaedia.org/images/71637349/070e639fd210b72bdf7438d2881439b8fc817e7060a3d37a6f6b7fb5dfb5da02.png", "https://prod-images-static.radiopaedia.org/images/71637350/ebb13907454b6473fa9fa568e5c8df2592af10df57acf3b5825f4c8dea818d0c.png", "https://prod-images-static.radiopaedia.org/images/71637351/93fc1cab7cb7501e93e5a4bae7d9ab673df292971cb1cb599a9a877d96a12504.png", "https://prod-images-static.radiopaedia.org/images/71637352/4e366dd7cf4b6a509f24aa938daa203fda9ec1d1c64c73b5f2a317746a4ece67.png", "https://prod-images-static.radiopaedia.org/images/71637353/3ab7b1fb71a26f399bd0d981d7953b5f7166e3928b317e6b1160df50599082db.png", "https://prod-images-static.radiopaedia.org/images/71637354/56488f2151d4066e6ebd99cb691a1c663062b1fd80a2e51ffa427f2ba2c583d8.png", "https://prod-images-static.radiopaedia.org/images/71637355/66be1fbb16f1e9bbdb777c6ec3ff69af2286a5991ac8edaf8dc580abb4b5d6f3.png", "https://prod-images-static.radiopaedia.org/images/71637356/830f1807d15f9ac0492d771caa295f81d57649f5ff95de6741d09dcb17f63468.png", "https://prod-images-static.radiopaedia.org/images/71637357/a77f02b7bf1764ff9b892b9f587bc58be8ca0ed4c419bfdeba32ed5fdb84ca69.png", "https://prod-images-static.radiopaedia.org/images/71637358/ea1c9ae3563b7b8476c6b5de35f50e03aedbb01602f237dc6ee35db119fcb2ab.png", "https://prod-images-static.radiopaedia.org/images/71637359/96f509e53f6192cababaa2a6bae2dd9b6f5d31886c972b306ded91bbad12d013.png", "https://prod-images-static.radiopaedia.org/images/71637360/5373c7dc4d9d7fcd451d7353a79ec344d597793b11ae3c9c5cd9ceb1ebeb7f4f.png", "https://prod-images-static.radiopaedia.org/images/71637361/7e838e4f8219a47129d0dfccbc39f115921db059246339cd244afd1f2345bd65.png", "https://prod-images-static.radiopaedia.org/images/71637362/59eff23e2bcda6a517b7c0c16c24e52a12eb40eca1c747b721e63f6708d262c3.png", "https://prod-images-static.radiopaedia.org/images/71637363/20ba31cbe1baa01915d6be1cf0d66beb6473e1ed3ff0e57e51f937453ed3d9b7.png", "https://prod-images-static.radiopaedia.org/images/71637364/c031755ce4fa262ae1093472887a761b554cc9435fff270209bcf1f0504d1cab.png", "https://prod-images-static.radiopaedia.org/images/71637365/94e807e3d62d3d8fa8d8be9d21fc9c6a720834553b7d091cfe17f13a9712d919.png", "https://prod-images-static.radiopaedia.org/images/71637366/73df9df8c24f5bc89f8a772e059260d20614aa64a696c17bfb5479601252facb.png", "https://prod-images-static.radiopaedia.org/images/71637367/2494a28d4110de98460ee986d15289e608c83e5b742ca896f622ceacf0c31018.png", "https://prod-images-static.radiopaedia.org/images/71637368/dae5a2b8da1ffd73a42eccf939602ca03d582799e7166b4e03e58f016902d83e.png", "https://prod-images-static.radiopaedia.org/images/71637369/2ea0c8fdac8fc892d23f3c45ba553f5a309e9d2427b5868d717e6c4e27e6b820.png", "https://prod-images-static.radiopaedia.org/images/71637370/3f710613182dc5680ee1712c8e80a913c22aa470a7b1e9c96551a76575a9088b.png", "https://prod-images-static.radiopaedia.org/images/71637371/989da3f997423feaff24c2a033e80bd6a9bc669a1acd48dc6f067e20fe746ff7.png", "https://prod-images-static.radiopaedia.org/images/71637372/814a57ce0f92f4c29effccd4989c4ea32c213630354ab43b1dcffc3ec19e8142.png", "https://prod-images-static.radiopaedia.org/images/71637373/4fbb1ff40d1386499d7e736df2adccab870ee1bab56e452744003d8c0a112784.png", "https://prod-images-static.radiopaedia.org/images/71637374/ff118273c0e3b11165acc7268bc591788f8ad39852d5890cbf9f8ab9eaede467.png", "https://prod-images-static.radiopaedia.org/images/71637375/02c64e14a75d41aa458950a716b4acf70575dba7b57bf0209c5e6f38e532d3b9.png", "https://prod-images-static.radiopaedia.org/images/71637376/0f94fbdf177d72baae7eef87c40ba65cfc0ed1ec9d154fa72e696fde889171c6.png", "https://prod-images-static.radiopaedia.org/images/71637377/ff8f2e00bd0c2742ce890945b88003d5704b185abb1e6337d6ef66091b776361.png", "https://prod-images-static.radiopaedia.org/images/71637378/d405f20cee48473d349babde91763858ca6ffe3a7845726ad0fadd7f13915a5c.png", "https://prod-images-static.radiopaedia.org/images/71637379/e3d9e745effa8b1b43f1388f967e2803046623728d98befc7115e95de7f58f29.png", "https://prod-images-static.radiopaedia.org/images/71637380/2a52f943c32ea5d03ee5ddc3d3aa75c9dcfb23295ba7aabc9015227d51fcd668.png", "https://prod-images-static.radiopaedia.org/images/71637381/57e1f840d509704e907d809a5b6e5247a09bdb112efbff9ab1909046fd595ffd.png", "https://prod-images-static.radiopaedia.org/images/71637382/083e1d940f21319db56ef237a6b2f8997f567182721bfa71c558006718725974.png", "https://prod-images-static.radiopaedia.org/images/71637383/c6ff4acaee1ab297f7bdbcf39e480b6028813f52f1d84c061e19bfd99d5d1f4a.png"
-                ],
-                parenchymaLinks: [
-                    "https://prod-images-static.radiopaedia.org/images/71637523/f70680fa8b9d575b3373e5ac71634bca791fb47b01023d9558a7b54ef4a354f7.png", "https://prod-images-static.radiopaedia.org/images/71637524/e8bd117f81bd1b517b3078899ef00d95ae8c0be49e9d50b1c220553f152c1f80.png", "https://prod-images-static.radiopaedia.org/images/71637525/aa40412d64a932fe2639bbb265eb6952f1a28e29a99d9b894af5500ca3a98e2c.png", "https://prod-images-static.radiopaedia.org/images/71637526/8ee19b214a7520754cb42e96b4044842910217375220a5e00bc622c67d1359ea.png", "https://prod-images-static.radiopaedia.org/images/71637527/9e0c8dd3dc59668cdbea43f359653eb3713af297592f6f851b25ce8a5fd530c0.png", "https://prod-images-static.radiopaedia.org/images/71637528/fb374c26389b372417813e4a25181fffdc059413e9379f293e966df53a25bf27.png", "https://prod-images-static.radiopaedia.org/images/71637529/ee8a5ed3d97b5675b829565315a9c0fcfcc08c7db6ea929e32a330504730b887.png", "https://prod-images-static.radiopaedia.org/images/71637530/947aa455935d47b14b24b975a6dbe845246d1aa0387294ac6e314e841826e5c2.png", "https://prod-images-static.radiopaedia.org/images/71637531/8311968cd9399768f04e8f7bd6fece0157a3e8493af0a631e9320d99e00823c5.png", "https://prod-images-static.radiopaedia.org/images/71637532/07543bf31b8ffae4f8bc4fa1b323fee7cbdcae52da2558b646ac6008e0257332.png", "https://prod-images-static.radiopaedia.org/images/71637533/388cd73334114f83a34b16becea3345c37568b8356bd95f89be527e50c533393.png", "https://prod-images-static.radiopaedia.org/images/71637534/26dfb33df9ec2ef34aceb039bf1f2a6fa65d71815d1ef458fda193333ac6ac20.png", "https://prod-images-static.radiopaedia.org/images/71637535/3b6954034bddec080fb989e6562b8a539d0b30d86e2afcccd1ab14fa0648598f.png", "https://prod-images-static.radiopaedia.org/images/71637536/91bd7a7c55302acb2c7b82c3560ab7efae6d31dfe618353b09c841fc0fecee34.png", "https://prod-images-static.radiopaedia.org/images/71637537/27dafc05bc8b9847e2ad445c76f6197b472944f333f609547fc2b17c29fca6cf.png", "https://prod-images-static.radiopaedia.org/images/71637538/1709911ad6f6a6221fa322c00138050e57e8f476e8e092f6a31c4daff8b59293.png", "https://prod-images-static.radiopaedia.org/images/71637539/64095e1057307fa6fc8206f5d30e2875306cf6dce53c9ed9a04122ae1af3b192.png", "https://prod-images-static.radiopaedia.org/images/71637540/7eb4469b0b8da8120187440136dfcf7a8a9c7ca52b2fbe9b77099a167a0ea66d.png", "https://prod-images-static.radiopaedia.org/images/71637541/5ad140c8b9ec27710a8b91326fd8c81b4c51e385c86a46bc8e2d22b2cbbc3a19.png", "https://prod-images-static.radiopaedia.org/images/71637542/ee99f62b7823b666c171ed092ef7c3cc3b81ed64f14bb0371098650c7fb879dd.png", "https://prod-images-static.radiopaedia.org/images/71637543/27097d69cf0c3e27ef2ff49b11b9a579f1e65eca21f420b1532caeee21ca91e6.png", "https://prod-images-static.radiopaedia.org/images/71637544/37189eb40210cc32897945454ccd80f78e15bc4dc77ba105d3cbf4767e1a591d.png", "https://prod-images-static.radiopaedia.org/images/71637545/2d14bc08c3980c7a086a628da0ac6e4e368e83570b980a454d08104b41a7fba7.png", "https://prod-images-static.radiopaedia.org/images/71637546/b23f07547cdc522e33ddfbc4b5835fbd2e76005e09f1262f137e5ddd34b595f0.png", "https://prod-images-static.radiopaedia.org/images/71637547/9a3b48ee00fb433f8786aa2a773dccad635d67fa4bac0b1f5fbeb4938555b581.png", "https://prod-images-static.radiopaedia.org/images/71637548/1849a07e2fc37fc8ce06b9a26dab53aee44825a2a0c07b19cfc0dd3d047ebe3b.png", "https://prod-images-static.radiopaedia.org/images/71637549/63bf4bcab986a1d8dca68b4daa093212cf31f0dff40ae1ca756e1a015ff088f9.png", "https://prod-images-static.radiopaedia.org/images/71637550/d73dbd884588cc0ad5bfa8c0c3023d79804ab2a5e3d695f290adc3dd09a26551.png", "https://prod-images-static.radiopaedia.org/images/71637551/bfa5242937e82318eb95062bf137769ecb9d945ca4887fdae173fef974045f36.png", "https://prod-images-static.radiopaedia.org/images/71637552/c4303993baa96c8e0dc7961f19b63bda1130e15860b19aeda03ff7d0815602d8.png", "https://prod-images-static.radiopaedia.org/images/71637553/a82062a9e840d6fdf23933e34f55654e3d0949835aa49ed1d7d6846e85a52e4c.png", "https://prod-images-static.radiopaedia.org/images/71637554/b9162769fa76df5456ae85c219b008c3870174f9c38e978e4c6be23e28492564.png", "https://prod-images-static.radiopaedia.org/images/71637555/f8a115271ae40e1e505e9f8a45b90d825e8f539cffa0afa62e545497527d69fb.png", "https://prod-images-static.radiopaedia.org/images/71637556/9e7a1d4e145340e7fbe6abf062f94d94253973e82c1d31dab1da626b73694da6.png", "https://prod-images-static.radiopaedia.org/images/71637557/77e2b6eacb084391da59f8f4d7ad18aa80b7a818e95b7d8c4efc192e374deef8.png", "https://prod-images-static.radiopaedia.org/images/71637558/12cfbe19490d73c05535d227d6d1e6afda86dbbcc7d3499fd141dafb463b3641.png", "https://prod-images-static.radiopaedia.org/images/71637559/49a9be98bb08322c0ef7c8405a34f6daa7779a0152e471d027deda14d8043a9b.png", "https://prod-images-static.radiopaedia.org/images/71637560/a855209f3b9350e003c279ee8d842fb05559484d94af955a8878352b9d760688.png", "https://prod-images-static.radiopaedia.org/images/71637561/5783d1f109f56cedc399abb4b9e23a96441e3eb6f8fc71ca6b21f77c7651fbe2.png", "https://prod-images-static.radiopaedia.org/images/71637562/a291bd52b8267d7b722ad22734f28deaf92e3f165d28794f5b5494cd6fdc901a.png", "https://prod-images-static.radiopaedia.org/images/71637563/b0b9c1c43892358aa3f845ddbebf2c5b1ef40ff7288125f36af231b09d3bdaf6.png", "https://prod-images-static.radiopaedia.org/images/71637565/fdedffb508c7040cc1fb49afa7190bd6f34cdebabbf54bb48ca7baaa8f539154.png", "https://prod-images-static.radiopaedia.org/images/71637566/3e4faf5252f59870d8c1237ce4f12d3215b48a3a5533b53f6e52523240765837.png", "https://prod-images-static.radiopaedia.org/images/71637567/e042ca9902ac04c6a55d72111a7e94dc7894e8bfe0ebae046b66400ed98a1411.png", "https://prod-images-static.radiopaedia.org/images/71637569/05f267d0c31892d491f14838ad8e1c3d429eda3d4baaf8b5485ff47bb87ad150.png", "https://prod-images-static.radiopaedia.org/images/71637570/85aabef0f80e79a04b0773f2ecdf40e9006b08a7499aec5d5bf01627d016a3a7.png", "https://prod-images-static.radiopaedia.org/images/71637571/5a0b68638c58796ee50380a084ea1164a5aa43a6f7d00a26287447bf628f2ee4.png", "https://prod-images-static.radiopaedia.org/images/71637572/e90124fc056978ed7b68e01362456e4f57a34f633ff09d7133854c79fdf447c7.png", "https://prod-images-static.radiopaedia.org/images/71637574/81c81c8520fff070a0a1368881e7c6dd7dfec9cb82fb1d7b5aa2bb1a4bf5f721.png", "https://prod-images-static.radiopaedia.org/images/71637575/fb6021ee83f88517efe6327cd41716e4d2698c5d0cf5608c20ac9966e3a86097.png", "https://prod-images-static.radiopaedia.org/images/71637576/56e0a26d24d763c39e32e518d200e6af5fbe2ed2d6becd430bd9bdb4051a6953.png", "https://prod-images-static.radiopaedia.org/images/71637577/11f73351eae3018a1d91c31798b5c90f2b498540f66f94cf4bc52696cb52b9ae.png"
-                ]
+            "patient3": {
+                name: "Bệnh nhân 3",
+                age: 15,
+                gender: "Nam",
+                description: "<h4>Mô tả lâm sàng:</h4><p>Đau hông bên phải kéo dài vài tuần.</p><h4>Đặc điểm hình ảnh:</h4><ul><li>Một tổn thương xương phá hủy kèm theo phản ứng màng xương nghi ngờ, tập trung ở xương chậu phải, với thành phần mô mềm ngoài xương liên quan đến các cơ chậu và cơ mông nhỏ cùng bên.</li></ul>",
+                series: {
+                    "cua-so-xuong-axial": {
+                        name: "Cửa sổ xương (Axial)",
+                        thumb: "https://prod-images-static.radiopaedia.org/images/71637359/96f509e53f6192cababaa2a6bae2dd9b6f5d31886c972b306ded91bbad12d013.png",
+                        images: [
+                            "https://prod-images-static.radiopaedia.org/images/71637336/51d3ee79ba9d7a2420949c64ed20d6778d3388ba5a2e91fd4a01b4a5a7e7b8ad.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637337/1856320aa7ea282184cdbc4809d2ef5ed5df670654ebaa975d0b7289ad2079df.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637338/c354b4c2975b361c276792168b0f35dc31ba541fa539277faa27ef98a6445d17.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637339/9f8065f2a0f4cc4a3bfe03f516006f9ccf7a240df455cc51dc2ad45222e34b0d.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637340/a99d05f33bdb074c0655061d5d3c727bc293c87b1f707bef6581390f76aeaf12.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637341/882bd4018d6ed36dd5a644c054d88d216c59707d1f2db516223c396908322a76.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637342/e7c4968d97fddea1f0995680f8727466d57c5183318c3294f702a4b50c5a2a3f.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637343/0281564b9801a98224c0e21080d92cff030e6475b7a1ea4505a5862a79d6e158.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637344/832fd078fb63ad75d40eb5c1da5a015e4dd1fba8b3d74b8d4f8aeebb7a0ef24e.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637345/f31b7f92963b8f02abe05f7cef9f1908e29c5fb7566716000c34bb3638650a5b.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637346/8614dce85d94248e5ae5fd2d5502a294b72ec2697ba81716832f34bdf4ebe74c.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637347/7b27df596d1e32ebe1bdd2935219a4c2f9a87a41adeaa9eedfcdc7fe535c8d29.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637348/d8c7e6bdf4a953173f6246a9d91be15e12be6bd90c3e485f5712fe9ae4a38457.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637349/070e639fd210b72bdf7438d2881439b8fc817e7060a3d37a6f6b7fb5dfb5da02.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637350/ebb13907454b6473fa9fa568e5c8df2592af10df57acf3b5825f4c8dea818d0c.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637351/93fc1cab7cb7501e93e5a4bae7d9ab673df292971cb1cb599a9a877d96a12504.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637352/4e366dd7cf4b6a509f24aa938daa203fda9ec1d1c64c73b5f2a317746a4ece67.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637353/3ab7b1fb71a26f399bd0d981d7953b5f7166e3928b317e6b1160df50599082db.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637354/56488f2151d4066e6ebd99cb691a1c663062b1fd80a2e51ffa427f2ba2c583d8.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637355/66be1fbb16f1e9bbdb777c6ec3ff69af2286a5991ac8edaf8dc580abb4b5d6f3.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637356/830f1807d15f9ac0492d771caa295f81d57649f5ff95de6741d09dcb17f63468.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637357/a77f02b7bf1764ff9b892b9f587bc58be8ca0ed4c419bfdeba32ed5fdb84ca69.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637358/ea1c9ae3563b7b8476c6b5de35f50e03aedbb01602f237dc6ee35db119fcb2ab.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637359/96f509e53f6192cababaa2a6bae2dd9b6f5d31886c972b306ded91bbad12d013.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637360/5373c7dc4d9d7fcd451d7353a79ec344d597793b11ae3c9c5cd9ceb1ebeb7f4f.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637361/7e838e4f8219a47129d0dfccbc39f115921db059246339cd244afd1f2345bd65.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637362/59eff23e2bcda6a517b7c0c16c24e52a12eb40eca1c747b721e63f6708d262c3.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637363/20ba31cbe1baa01915d6be1cf0d66beb6473e1ed3ff0e57e51f937453ed3d9b7.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637364/c031755ce4fa262ae1093472887a761b554cc9435fff270209bcf1f0504d1cab.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637365/94e807e3d62d3d8fa8d8be9d21fc9c6a720834553b7d091cfe17f13a9712d919.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637366/73df9df8c24f5bc89f8a772e059260d20614aa64a696c17bfb5479601252facb.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637367/2494a28d4110de98460ee986d15289e608c83e5b742ca896f622ceacf0c31018.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637368/dae5a2b8da1ffd73a42eccf939602ca03d582799e7166b4e03e58f016902d83e.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637369/2ea0c8fdac8fc892d23f3c45ba553f5a309e9d2427b5868d717e6c4e27e6b820.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637370/3f710613182dc5680ee1712c8e80a913c22aa470a7b1e9c96551a76575a9088b.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637371/989da3f997423feaff24c2a033e80bd6a9bc669a1acd48dc6f067e20fe746ff7.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637372/814a57ce0f92f4c29effccd4989c4ea32c213630354ab43b1dcffc3ec19e8142.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637373/4fbb1ff40d1386499d7e736df2adccab870ee1bab56e452744003d8c0a112784.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637374/ff118273c0e3b11165acc7268bc591788f8ad39852d5890cbf9f8ab9eaede467.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637375/02c64e14a75d41aa458950a716b4acf70575dba7b57bf0209c5e6f38e532d3b9.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637376/0f94fbdf177d72baae7eef87c40ba65cfc0ed1ec9d154fa72e696fde889171c6.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637377/ff8f2e00bd0c2742ce890945b88003d5704b185abb1e6337d6ef66091b776361.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637378/d405f20cee48473d349babde91763858ca6ffe3a7845726ad0fadd7f13915a5c.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637379/e3d9e745effa8b1b43f1388f967e2803046623728d98befc7115e95de7f58f29.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637380/2a52f943c32ea5d03ee5ddc3d3aa75c9dcfb23295ba7aabc9015227d51fcd668.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637381/57e1f840d509704e907d809a5b6e5247a09bdb112efbff9ab1909046fd595ffd.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637382/083e1d940f21319db56ef237a6b2f8997f567182721bfa71c558006718725974.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637383/c6ff4acaee1ab297f7bdbcf39e480b6028813f52f1d84c061e19bfd99d5d1f4a.png"
+                        ]
+                    },
+                    "cua-so-nhu-mo-tinh-mach": {
+                        name: "Cửa sổ nhu mô (Tĩnh mạch)",
+                        thumb: "https://prod-images-static.radiopaedia.org/images/71637549/63bf4bcab986a1d8dca68b4daa093212cf31f0dff40ae1ca756e1a015ff088f9.png",
+                        images: [
+                            "https://prod-images-static.radiopaedia.org/images/71637523/f70680fa8b9d575b3373e5ac71634bca791fb47b01023d9558a7b54ef4a354f7.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637524/e8bd117f81bd1b517b3078899ef00d95ae8c0be49e9d50b1c220553f152c1f80.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637525/aa40412d64a932fe2639bbb265eb6952f1a28e29a99d9b894af5500ca3a98e2c.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637526/8ee19b214a7520754cb42e96b4044842910217375220a5e00bc622c67d1359ea.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637527/9e0c8dd3dc59668cdbea43f359653eb3713af297592f6f851b25ce8a5fd530c0.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637528/fb374c26389b372417813e4a25181fffdc059413e9379f293e966df53a25bf27.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637529/ee8a5ed3d97b5675b829565315a9c0fcfcc08c7db6ea929e32a330504730b887.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637530/947aa455935d47b14b24b975a6dbe845246d1aa0387294ac6e314e841826e5c2.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637531/8311968cd9399768f04e8f7bd6fece0157a3e8493af0a631e9320d99e00823c5.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637532/07543bf31b8ffae4f8bc4fa1b323fee7cbdcae52da2558b646ac6008e0257332.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637533/388cd73334114f83a34b16becea3345c37568b8356bd95f89be527e50c533393.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637534/26dfb33df9ec2ef34aceb039bf1f2a6fa65d71815d1ef458fda193333ac6ac20.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637535/3b6954034bddec080fb989e6562b8a539d0b30d86e2afcccd1ab14fa0648598f.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637536/91bd7a7c55302acb2c7b82c3560ab7efae6d31dfe618353b09c841fc0fecee34.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637537/27dafc05bc8b9847e2ad445c76f6197b472944f333f609547fc2b17c29fca6cf.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637538/1709911ad6f6a6221fa322c00138050e57e8f476e8e092f6a31c4daff8b59293.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637539/64095e1057307fa6fc8206f5d30e2875306cf6dce53c9ed9a04122ae1af3b192.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637540/7eb4469b0b8da8120187440136dfcf7a8a9c7ca52b2fbe9b77099a167a0ea66d.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637541/5ad140c8b9ec27710a8b91326fd8c81b4c51e385c86a46bc8e2d22b2cbbc3a19.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637542/ee99f62b7823b666c171ed092ef7c3cc3b81ed64f14bb0371098650c7fb879dd.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637543/27097d69cf0c3e27ef2ff49b11b9a579f1e65eca21f420b1532caeee21ca91e6.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637544/37189eb40210cc32897945454ccd80f78e15bc4dc77ba105d3cbf4767e1a591d.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637545/2d14bc08c3980c7a086a628da0ac6e4e368e83570b980a454d08104b41a7fba7.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637546/b23f07547cdc522e33ddfbc4b5835fbd2e76005e09f1262f137e5ddd34b595f0.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637547/9a3b48ee00fb433f8786aa2a773dccad635d67fa4bac0b1f5fbeb4938555b581.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637548/1849a07e2fc37fc8ce06b9a26dab53aee44825a2a0c07b19cfc0dd3d047ebe3b.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637549/63bf4bcab986a1d8dca68b4daa093212cf31f0dff40ae1ca756e1a015ff088f9.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637550/d73dbd884588cc0ad5bfa8c0c3023d79804ab2a5e3d695f290adc3dd09a26551.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637551/bfa5242937e82318eb95062bf137769ecb9d945ca4887fdae173fef974045f36.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637552/c4303993baa96c8e0dc7961f19b63bda1130e15860b19aeda03ff7d0815602d8.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637553/a82062a9e840d6fdf23933e34f55654e3d0949835aa49ed1d7d6846e85a52e4c.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637554/b9162769fa76df5456ae85c219b008c3870174f9c38e978e4c6be23e28492564.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637555/f8a115271ae40e1e505e9f8a45b90d825e8f539cffa0afa62e545497527d69fb.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637556/9e7a1d4e145340e7fbe6abf062f94d94253973e82c1d31dab1da626b73694da6.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637557/77e2b6eacb084391da59f8f4d7ad18aa80b7a818e95b7d8c4efc192e374deef8.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637558/12cfbe19490d73c05535d227d6d1e6afda86dbbcc7d3499fd141dafb463b3641.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637559/49a9be98bb08322c0ef7c8405a34f6daa7779a0152e471d027deda14d8043a9b.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637560/a855209f3b9350e003c279ee8d842fb05559484d94af955a8878352b9d760688.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637561/5783d1f109f56cedc399abb4b9e23a96441e3eb6f8fc71ca6b21f77c7651fbe2.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637562/a291bd52b8267d7b722ad22734f28deaf92e3f165d28794f5b5494cd6fdc901a.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637563/b0b9c1c43892358aa3f845ddbebf2c5b1ef40ff7288125f36af231b09d3bdaf6.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637565/fdedffb508c7040cc1fb49afa7190bd6f34cdebabbf54bb48ca7baaa8f539154.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637566/3e4faf5252f59870d8c1237ce4f12d3215b48a3a5533b53f6e52523240765837.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637567/e042ca9902ac04c6a55d72111a7e94dc7894e8bfe0ebae046b66400ed98a1411.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637569/05f267d0c31892d491f14838ad8e1c3d429eda3d4baaf8b5485ff47bb87ad150.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637570/85aabef0f80e79a04b0773f2ecdf40e9006b08a7499aec5d5bf01627d016a3a7.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637571/5a0b68638c58796ee50380a084ea1164a5aa43a6f7d00a26287447bf628f2ee4.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637572/e90124fc056978ed7b68e01362456e4f57a34f633ff09d7133854c79fdf447c7.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637574/81c81c8520fff070a0a1368881e7c6dd7dfec9cb82fb1d7b5aa2bb1a4bf5f721.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637575/fb6021ee83f88517efe6327cd41716e4d2698c5d0cf5608c20ac9966e3a86097.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637576/56e0a26d24d763c39e32e518d200e6af5fbe2ed2d6becd430bd9bdb4051a6953.png",
+                            "https://prod-images-static.radiopaedia.org/images/71637577/11f73351eae3018a1d91c31798b5c90f2b498540f66f94cf4bc52696cb52b9ae.png"
+                        ]
+                    }
+                }
             }
         };
 
-        let currentPatientId = 1;
-        let slices = { bone: 0, parenchyma: 0 };
-        let totalSlices = { bone: 0, parenchyma: 0 };
-        let activePane = 'bone'; 
+        let currentPatientId = "patient1";
+        let currentSeriesId = "";
+        let currentImageIndex = 0;
+        let imagesArray = [];
 
-        let preloadedImages = { bone: [], parenchyma: [] };
-        const slider = document.getElementById('slice-slider');
+        const mainImage = document.getElementById('main-image');
+        const sliceCounter = document.getElementById('slice-counter');
+        const viewerArea = document.getElementById('viewer-area');
+        const thumbnailContainer = document.getElementById('thumbnail-container');
+        const patientAgeGender = document.getElementById('patient-age-gender');
+        const patientDetailsPanel = document.getElementById('patient-details-panel');
+        const patientDetailsContent = document.getElementById('patient-details-content');
+        const toggleDetailsBtn = document.getElementById('toggle-details-btn');
 
-        // --- HÀM MỞ/ĐÓNG MÔ TẢ ---
-        function openDescription() {
-            const data = database[currentPatientId];
-            document.getElementById('modal-patient-id').textContent = currentPatientId;
-            document.getElementById('modal-desc-text').innerHTML = data.description || "Chưa có thông tin mô tả cho bệnh nhân này.";
-            document.getElementById('desc-modal').style.display = 'flex';
-        }
-
-        function closeDescription() {
-            document.getElementById('desc-modal').style.display = 'none';
-        }
-
-        // Bấm ra ngoài cửa sổ để đóng
-        window.onclick = function(event) {
-            const modal = document.getElementById('desc-modal');
-            if (event.target === modal) {
-                modal.style.display = "none";
-            }
-        }
-
-        // --- CÁC HÀM XỬ LÝ ẢNH ---
-        function setActivePane(pane) {
-            activePane = pane;
-            document.getElementById('box-bone').classList.toggle('active', pane === 'bone');
-            document.getElementById('box-parenchyma').classList.toggle('active', pane === 'parenchyma');
-            
-            if (totalSlices[pane] > 0) {
-                slider.disabled = false;
-                slider.max = totalSlices[pane];
-                slider.value = slices[pane] + 1;
-            } else {
-                slider.disabled = true;
-                slider.value = 1;
-            }
-        }
-
-        function loadPatient(patientId) {
-            document.querySelectorAll('.tabs button').forEach((btn, idx) => {
-                btn.className = (idx + 1 === patientId) ? 'active' : '';
-            });
-
+        function changePatient(patientId) {
             currentPatientId = patientId;
-            const data = database[patientId];
-            document.getElementById('patient-info').textContent = data.info;
-
-            slices = { bone: 0, parenchyma: 0 };
-            totalSlices.bone = data.boneLinks.length;
-            totalSlices.parenchyma = data.parenchymaLinks.length;
-
-            document.getElementById('total-bone').textContent = totalSlices.bone;
-            document.getElementById('total-parenchyma').textContent = totalSlices.parenchyma;
-
-            if (totalSlices.bone === 0 && totalSlices.parenchyma === 0) {
-                resetViewer();
-                return;
+            const patient = database[patientId];
+            
+            patientAgeGender.innerText = `${patient.name} | Giới tính: ${patient.gender} | Tuổi: ${patient.age}`;
+            
+            if (patientDetailsPanel.classList.contains('open')) {
+                togglePatientDetails();
             }
-
-            document.getElementById('loading-screen').style.display = 'flex';
-            document.getElementById('progress-fill').style.width = '0%';
-            slider.disabled = true;
             
-            preloadData(data);
-        }
-
-        function preloadData(data) {
-            let loaded = 0;
-            const totalToLoad = totalSlices.bone + totalSlices.parenchyma;
-            preloadedImages = { bone: [], parenchyma: [] };
-
-            const checkDone = () => {
-                loaded++;
-                document.getElementById('progress-fill').style.width = `${(loaded / totalToLoad) * 100}%`;
-                if (loaded === totalToLoad) {
-                    setTimeout(() => {
-                        document.getElementById('loading-screen').style.display = 'none';
-                        if(totalSlices.bone > 0) updateImage('bone', 0);
-                        else showPlaceholder('bone');
-                        if(totalSlices.parenchyma > 0) updateImage('parenchyma', 0);
-                        else showPlaceholder('parenchyma');
-                        setActivePane('bone');
-                    }, 300);
-                }
-            };
-
-            data.boneLinks.forEach((link, i) => {
-                const img = new Image();
-                img.onload = checkDone; img.onerror = checkDone;
-                img.src = link;
-                preloadedImages.bone[i] = img;
+            thumbnailContainer.innerHTML = '';
+            const seriesKeys = Object.keys(patient.series);
+            
+            seriesKeys.forEach(seriesId => {
+                const seriesData = patient.series[seriesId];
+                const div = document.createElement('div');
+                div.className = `series-thumbnail`;
+                div.id = `thumb-${seriesId}`;
+                div.onclick = () => loadSeries(seriesId);
+                div.innerHTML = `
+                    <div class="thumbnail-img-box"><img src="${seriesData.thumb}" alt="${seriesData.name}"></div>
+                    <span>${seriesData.name}</span>
+                `;
+                thumbnailContainer.appendChild(div);
             });
 
-            data.parenchymaLinks.forEach((link, i) => {
-                const img = new Image();
-                img.onload = checkDone; img.onerror = checkDone;
-                img.src = link;
-                preloadedImages.parenchyma[i] = img;
-            });
-        }
-
-        function updateImage(pane, index) {
-            if (totalSlices[pane] === 0) return;
-            if (index < 0) index = 0;
-            if (index >= totalSlices[pane]) index = totalSlices[pane] - 1;
-            
-            slices[pane] = index;
-            document.getElementById(`img-${pane}`).style.display = 'block';
-            document.getElementById(`ph-${pane}`).style.display = 'none';
-            document.getElementById(`img-${pane}`).src = preloadedImages[pane][index].src;
-            document.getElementById(`slice-${pane}`).textContent = index + 1;
-
-            if (activePane === pane) {
-                slider.value = index + 1;
+            if (seriesKeys.length > 0) {
+                loadSeries(seriesKeys[0]);
+            } else {
+                imagesArray = [];
+                updateImage();
             }
         }
 
-        function showPlaceholder(pane) {
-            document.getElementById(`img-${pane}`).style.display = 'none';
-            document.getElementById(`ph-${pane}`).style.display = 'block';
-            document.getElementById(`ph-${pane}`).textContent = "Chưa có link ảnh";
+        function loadSeries(seriesId) {
+            currentSeriesId = seriesId;
+            imagesArray = database[currentPatientId].series[seriesId].images;
+            currentImageIndex = 0;
+
+            document.querySelectorAll('.series-thumbnail').forEach(el => el.classList.remove('active'));
+            const activeThumb = document.getElementById(`thumb-${seriesId}`);
+            if(activeThumb) activeThumb.classList.add('active');
+
+            updateImage();
         }
 
-        function resetViewer() {
-            showPlaceholder('bone');
-            showPlaceholder('parenchyma');
-            document.getElementById('slice-bone').textContent = "0";
-            document.getElementById('slice-parenchyma').textContent = "0";
-            slider.disabled = true;
+        function updateImage() {
+            if (imagesArray.length > 0) {
+                mainImage.src = imagesArray[currentImageIndex];
+                sliceCounter.innerText = `Lát cắt: ${currentImageIndex + 1} / ${imagesArray.length}`;
+            } else {
+                mainImage.src = "https://via.placeholder.com/800x600/000/333?text=Chua+co+du+lieu+anh";
+                sliceCounter.innerText = `Lát cắt: 0 / 0`;
+            }
         }
 
-        window.addEventListener('wheel', (e) => {
-            if (e.deltaY > 0) updateImage(activePane, slices[activePane] + 1);
-            else updateImage(activePane, slices[activePane] - 1);
+        function togglePatientDetails() {
+            const patient = database[currentPatientId];
+            patientDetailsContent.innerHTML = patient.description;
+            
+            if (patientDetailsPanel.classList.contains('open')) {
+                patientDetailsPanel.classList.remove('open');
+                toggleDetailsBtn.innerText = "Xem thêm thông tin";
+            } else {
+                patientDetailsPanel.classList.add('open');
+                toggleDetailsBtn.innerText = "Đóng thông tin";
+            }
+        }
+
+        function changeSlice(direction) {
+            if (direction === 'next' && currentImageIndex < imagesArray.length - 1) {
+                currentImageIndex++;
+                updateImage();
+            } else if (direction === 'prev' && currentImageIndex > 0) {
+                currentImageIndex--;
+                updateImage();
+            }
+        }
+
+        viewerArea.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            changeSlice(e.deltaY > 0 ? 'next' : 'prev');
         });
 
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); updateImage(activePane, slices[activePane] - 1); }
-            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); updateImage(activePane, slices[activePane] + 1); }
+        let startY = 0, isDragging = false;
+        viewerArea.addEventListener('mousedown', (e) => { isDragging = true; startY = e.clientY; });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        viewerArea.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            let diff = startY - e.clientY;
+            if (Math.abs(diff) > 20) {
+                changeSlice(diff > 0 ? 'next' : 'prev');
+                startY = e.clientY;
+            }
         });
 
-        slider.addEventListener('input', (e) => {
-            updateImage(activePane, parseInt(e.target.value) - 1);
-        });
+        let touchStartY = 0;
+        viewerArea.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: false });
+        viewerArea.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            let diff = touchStartY - e.touches[0].clientY;
+            if (Math.abs(diff) > 20) {
+                changeSlice(diff > 0 ? 'next' : 'prev');
+                touchStartY = e.touches[0].clientY;
+            }
+        }, { passive: false });
 
-        loadPatient(1);
+        changePatient(currentPatientId);
+
     </script>
 </body>
 </html>
